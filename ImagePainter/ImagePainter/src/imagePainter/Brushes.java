@@ -36,6 +36,7 @@ public class Brushes {
 		//this.brushPixels = brushPixels;
 		
 		// generate 16 brush strokes, with each stroke being 360/16 (22.5) deg from the last
+		
 	
 	}
 	
