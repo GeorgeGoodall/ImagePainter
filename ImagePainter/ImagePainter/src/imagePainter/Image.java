@@ -126,7 +126,7 @@ public class Image
     }
     
     public Image blurImage(){
-    	if(!blur.equals(null))
+    	if(blur != null)
     	{
     		return blur;
     	}
@@ -139,33 +139,26 @@ public class Image
     	}
     }
     
-    public Image sobelMagnitude(){
-    	
-    	if(!sobelMagnitude.equals(null)){
-    		return sobelMagnitude;
-    	}
-    	else
-    	{
-    		performSobel();
-    		return sobelMagnitude;
-    	}
+    public Image sobelMagnitude(){	
+    	if(sobelMagnitude == null){ performSobel(); }
+    	return sobelMagnitude;	
    }
     
-    public double[][] sobelOrientation(){
-    	
-    	if(!sobelMagnitude.equals(null)){
-    		return sobelOrientation;
-    	}
-    	else
-    	{
-    		performSobel();
-    		return sobelOrientation;
-    	}
+    public double[][] sobelOrientation(){  	
+    	if(sobelMagnitude == null){ performSobel(); }
+    	return sobelOrientation;
    }
     
     private void performSobel(){
-    	int[][] horizontalMask = new int[][]{{-1,0,1},{-2,0,1},{-1,0,1}};
-        int[][] verticalMask = new int[][]{{-1,-2,-1},{ 0, 0, 0},{ 1, 2, 1}};
+    	//int[][] horizontalMask = new int[][]{{-1,0,1},{-2,0,1},{-1,0,1}};
+        //int[][] verticalMask = new int[][]{{-1,-2,-1},{ 0, 0, 0},{ 1, 2, 1}};
+        
+    	//int[][] horizontalMask = new int[][]{{-1,-2,0,2,1},{-1,-2,0,2,1},{-1,-2,0,2,1},{-1,-2,0,2,1},{-1,-2,0,2,1}};
+        //int[][] verticalMask = new int[][]{{-1,-1,-1,-1,-1},{-2,-2,-2,-2,-2},{0,0,0,0,0},{2,2,2,2,2},{1,1,1,1,1}};
+        
+        int[][] horizontalMask = new int[][]{{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1}};
+        int[][] verticalMask = new int[][]{{-1,-1,-1,-1,-1,-1,-1},{-2,-2,-2,-2,-2,-2,-2},{-4,-4,-4,-4,-4,-4,-4},{0,0,0,0,0,0,0},{4,4,4,4,4,4,4},{2,2,2,2,2,2,2},{1,1,1,1,1,1,1}};
+        
         
         Image sobelX = applyMask(horizontalMask);
         Image sobelY = applyMask(verticalMask);
@@ -177,9 +170,12 @@ public class Image
         {
             for (int x = 1; x < this.width - 1; x++)
             {
-            	sobelMagnitude.pixels[x][y] = (int)Math.round(Math.sqrt((sobelX.pixels[x][y] * sobelX.pixels[x][y]) + (sobelY.pixels[x][y] * sobelY.pixels[x][y])));
-            	sobelOrientation[x][y] = Math.atan(sobelY.pixels[i][j]/sobelX.pixels[i][j]);
-            	return sobelMagnitude;
+            	sobelMagnitude.pixels[y][x] = (int)Math.round(Math.sqrt((sobelX.pixels[y][x] * sobelX.pixels[y][x]) + (sobelY.pixels[y][x] * sobelY.pixels[y][x])));
+            	if(sobelX.pixels[y][x] == 0){sobelOrientation[y][x] = 1;}
+            	else
+            	{
+            		sobelOrientation[y][x] = Math.atan(sobelY.pixels[y][x]/sobelX.pixels[y][x]);
+            	}
             }
         }
     }
@@ -195,15 +191,16 @@ public class Image
             {
             	int count = 0; // count the number of pixels in filter to calculate average
                 int sum = 0;
+                int maskOffset = (mask.length - 1)/2; // 
                 // check horizontal mask and add pixel to horEdges
-                for (int i = (mask.length - 1)/2 ; i <= mask.length; i++)
+                for (int i = maskOffset - (mask.length - 1) ; i <= maskOffset; i++)
                 {
-                    for(int j = (mask[0].length - 1)/2; j <= mask.length; j++)
+                    for(int j = maskOffset - (mask[0].length - 1); j <= maskOffset; j++)
                     {
                     	// if the masks current pixel is on the image
-                    	if(x+i < 0 || x+i >= this.height || y+j < 0 || y+j >= this.height)
+                    	if(!(x+i < 0 || x+i >= this.height || y+j < 0 || y+j >= this.height))
                     	{
-                            sum += this.pixels[x+(i-1)][y+(j-1)] * mask[i][j];
+                            sum += this.pixels[x+i][y+j] * mask[i + maskOffset][j + maskOffset];
                             count++;
                     	}
 
