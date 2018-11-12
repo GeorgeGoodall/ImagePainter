@@ -20,6 +20,7 @@ public class ImagePPM
 {
     public int [][][] pixels;
     public int depth,width,height;
+    private int[] averageRGB;
 
     public ImagePPM()
     {
@@ -118,13 +119,79 @@ public class ImagePPM
     public Image getGreyScaleImage(){
     	Image greyImage =  new Image(this.depth,this.width,this.height);
     	
-    	for(int j = 0; j < height;j++){
-    		for(int i = 0; i < width; i++){
+    	for(int j = 0; j < width;j++){
+    		for(int i = 0; i < height; i++){
     			greyImage.pixels[j][i] = (this.pixels[0][j][i] + this.pixels[1][j][i] + this.pixels[2][j][i]) / 3;
     		}
     	}
     	
     	return greyImage;
     }
+    
+    // todo make mask offsets for X and Y
+    public int[] getAverageColour(int[][] mask, int xLocation, int yLocation){
+    	int count = 0; // count the number of pixels in filter to calculate average
+        int[] sum = new int[3];
+        int maskOffset = (mask.length)/2;
+        int remander = (mask.length)%2;
+        
+    	for (int i = maskOffset - (mask.length) + remander; i < maskOffset; i++)
+        {
+            for(int j = maskOffset - (mask[0].length) + remander; j < maskOffset; j++)
+            {
+            	// if the masks current pixel is on the image
+            	if(!(xLocation+i < 0 || xLocation+i >= this.height || yLocation+j < 0 || yLocation+j >= this.height))
+            	{
+            		for(int colour = 0; colour < sum.length; colour++){
+                        sum[colour] += (int)Math.round(this.pixels[colour][xLocation+i][yLocation+j] * (1 - mask[i + maskOffset][j + maskOffset] / 255)); 
+            		}
+            		count++;
+            	}
 
+            }
+        }
+		for(int colour = 0; colour < sum.length; colour++){
+            sum[colour] = sum[colour] / count;
+		}
+    	return sum;
+    }
+    
+    public void paintStroke(int[][] brush, int[] colour, int xLocation, int yLocation){
+    	int maskOffset = (brush.length)/2;
+    	int r = (brush.length)%2;
+    	
+    	for (int i = maskOffset - (brush.length) ; i < maskOffset; i++){
+            for(int j = maskOffset - (brush[0].length); j < maskOffset; j++){
+            	if(!(xLocation+i < 0 || xLocation+i >= this.width || yLocation+j < 0 || yLocation+j >= this.height)){
+	            	if(brush[i+maskOffset+r][j+maskOffset+r]/255 != 1)
+	            	{
+	            		for(int k = 0; k < colour.length; k++){
+	            			this.pixels[k][xLocation+i][yLocation+j] = (int)Math.round(colour[k] * 1 - (brush[i+maskOffset+r][j+maskOffset+r]/255)); 
+	            		}	
+	            	}
+            	}
+            }
+        }
+    }
+    
+    public int[] getAverageRGB(boolean recalculate){
+    	if(averageRGB != null && recalculate == false){ return averageRGB;}
+    	else{
+    		int[] sums = new int[3];
+    		int count = 0;
+    		for(int i = 0; i < this.pixels[0].length; i++){
+    			for(int j = 0; j < this.pixels[0][0].length; j++){
+    				for(int k = 0; k < 3; k++){
+    					sums[k] += this.pixels[k][i][j];
+    				}
+    				count++;
+    			}
+    		}
+    		for(int k = 0; k < 3; k++){
+				sums[k] = sums[k] / count;
+			}
+    		averageRGB = sums;
+    		return averageRGB;
+    	}
+    }
 }

@@ -24,6 +24,8 @@ public class Image
     public int [][] pixels;
     public int depth,width,height;
     
+
+    
     private Image sobelMagnitude = null;
     private double[][] sobelOrientation = null;
     private Image blur = null;
@@ -79,6 +81,8 @@ public class Image
             st = new StringTokenizer(line);
             depth = Integer.parseInt(st.nextToken());
 
+            this.pixels = new int[width][height];
+            
             // read pixels now
             for (int y = 0; y < height; y++)
                 for (int x = 0; x < width; x++)
@@ -97,10 +101,6 @@ public class Image
 
     public void WritePGM(String fileName)
     {
-        String line;
-        StringTokenizer st;
-        int i;
-
         try {
             DataOutputStream out =
               new DataOutputStream(
@@ -150,15 +150,15 @@ public class Image
    }
     
     private void performSobel(){
-    	//int[][] horizontalMask = new int[][]{{-1,0,1},{-2,0,1},{-1,0,1}};
-        //int[][] verticalMask = new int[][]{{-1,-2,-1},{ 0, 0, 0},{ 1, 2, 1}};
+//    	int[][] horizontalMask = new int[][]{{-1,0,1},{-2,0,1},{-1,0,1}};
+//        int[][] verticalMask = new int[][]{{-1,-2,-1},{ 0, 0, 0},{ 1, 2, 1}};
         
-    	//int[][] horizontalMask = new int[][]{{-1,-2,0,2,1},{-1,-2,0,2,1},{-1,-2,0,2,1},{-1,-2,0,2,1},{-1,-2,0,2,1}};
-        //int[][] verticalMask = new int[][]{{-1,-1,-1,-1,-1},{-2,-2,-2,-2,-2},{0,0,0,0,0},{2,2,2,2,2},{1,1,1,1,1}};
+    	int[][] horizontalMask = new int[][]{{-1,-2,0,2,1},{-1,-2,0,2,1},{-1,-2,0,2,1},{-1,-2,0,2,1},{-1,-2,0,2,1}};
+        int[][] verticalMask = new int[][]{{-1,-1,-1,-1,-1},{-2,-2,-2,-2,-2},{0,0,0,0,0},{2,2,2,2,2},{1,1,1,1,1}};
         
-        int[][] horizontalMask = new int[][]{{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1}};
-        int[][] verticalMask = new int[][]{{-1,-1,-1,-1,-1,-1,-1},{-2,-2,-2,-2,-2,-2,-2},{-4,-4,-4,-4,-4,-4,-4},{0,0,0,0,0,0,0},{4,4,4,4,4,4,4},{2,2,2,2,2,2,2},{1,1,1,1,1,1,1}};
-        
+//        int[][] horizontalMask = new int[][]{{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1}};
+//        int[][] verticalMask = new int[][]{{-1,-1,-1,-1,-1,-1,-1},{-2,-2,-2,-2,-2,-2,-2},{-4,-4,-4,-4,-4,-4,-4},{0,0,0,0,0,0,0},{4,4,4,4,4,4,4},{2,2,2,2,2,2,2},{1,1,1,1,1,1,1}};
+//        
         
         Image sobelX = applyMask(horizontalMask);
         Image sobelY = applyMask(verticalMask);
@@ -170,17 +170,20 @@ public class Image
         {
             for (int x = 1; x < this.width - 1; x++)
             {
-            	sobelMagnitude.pixels[y][x] = (int)Math.round(Math.sqrt((sobelX.pixels[y][x] * sobelX.pixels[y][x]) + (sobelY.pixels[y][x] * sobelY.pixels[y][x])));
-            	if(sobelX.pixels[y][x] == 0){sobelOrientation[y][x] = 1;}
+            	sobelMagnitude.pixels[x][y] = (int)Math.round(Math.sqrt((sobelX.pixels[x][y] * sobelX.pixels[x][y]) + (sobelY.pixels[x][y] * sobelY.pixels[x][y])));
+            	if(sobelX.pixels[x][y] == 0){sobelOrientation[x][y] = 1;}
             	else
             	{
-            		sobelOrientation[y][x] = Math.atan(sobelY.pixels[y][x]/sobelX.pixels[y][x]);
+            		sobelOrientation[x][y] = Math.atan(-sobelY.pixels[x][y]/sobelX.pixels[x][y]);
+            		if(sobelOrientation[x][y] < 0){
+            			sobelOrientation[x][y] = (2 * Math.PI) + sobelOrientation[x][y];
+            		}
             	}
             }
         }
     }
     
-    private Image applyMask(int[][] mask){
+    public Image applyMask(int[][] mask){
     	
         Image filteredImage = this.copyBlankCanvas();
         
@@ -198,7 +201,7 @@ public class Image
                     for(int j = maskOffset - (mask[0].length - 1); j <= maskOffset; j++)
                     {
                     	// if the masks current pixel is on the image
-                    	if(!(x+i < 0 || x+i >= this.height || y+j < 0 || y+j >= this.height))
+                    	if(!(x+i < 0 || x+i >= this.width || y+j < 0 || y+j >= this.height))
                     	{
                             sum += this.pixels[x+i][y+j] * mask[i + maskOffset][j + maskOffset];
                             count++;
@@ -214,4 +217,8 @@ public class Image
         
         return filteredImage;
     }
+    
+   
+    
+
 }
