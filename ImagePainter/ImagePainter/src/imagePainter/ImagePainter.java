@@ -1,4 +1,5 @@
 package imagePainter;
+import java.io.File;
 
 public class ImagePainter {
 	
@@ -8,33 +9,39 @@ public class ImagePainter {
 	
 	public static void main(String[] args)
 	{
+		if(checkFolderStructure()){
+			System.out.println("Images Folder was made");
+		}
+
 		ImagePPM imPPM = new ImagePPM();
-		imPPM.ReadPPM(args[0]);
+		try {imPPM.ReadPPM(args[0]);}
+		catch(Exception e){System.out.println("image " + args[1] + " not found"); return;}
 		System.out.println("image loaded sucessfully");
 		
 		System.out.print("greyscale image produced: ");
 		Image imGS = imPPM.getGreyScaleImage();
 		System.out.print("Successfully | Saved: ");
-		imGS.WritePGM("Images/OutputImages/greyScaleImage.PGM");
+		imGS.WritePGM("../Images/OutputImages/greyScaleImage.PGM");
 		System.out.println("Successfully");
 		
 		System.out.print("Blured Image Produced: ");
 		Image imBlured = imGS.blurImage();
 		System.out.print("Successfully | Saved: ");
-		imBlured.WritePGM("Images/OutputImages/BluredImage.PGM");
+		imBlured.WritePGM("../Images/OutputImages/BluredImage.PGM");
 		System.out.println("Successfully");
 		
 		System.out.print("Sobel Magnitude Image Produced: ");
 		Image sobelMagnitude = imBlured.sobelMagnitude();
 		System.out.print("Successfully | Saved: ");
-		sobelMagnitude.WritePGM("Images/OutputImages/SobelMagImage.PGM");
+		sobelMagnitude.WritePGM("../Images/OutputImages/SobelMagImage.PGM");
 		System.out.println("Successfully");
 		
 		double[][] sobelOrientation = imBlured.sobelOrientation();
 		
 		Image brush = new Image();
 		System.out.print("Brush Loaded: ");
-		brush.ReadPGM("Images/BrushRect.pgm");
+		try{ brush.ReadPGM(args[1]);}
+		catch(Exception e){ System.out.println("brush " + args[1] + " not found"); return;}
 		System.out.println("Successfully");
 		System.out.print("brushes scaled and rotated :");
 		Brushes brushes = new Brushes(brush.pixels);
@@ -43,7 +50,7 @@ public class ImagePainter {
 		try{
 			//density = Integer.parseInt(args[1]);
 			density = 4;
-			System.out.println("density peramiter \""+density+"\", loaded successfully");
+			System.out.println("density peramiter \""+density+"\" loaded successfully");
 		}
 		catch(NumberFormatException e){
 			System.out.println("Pram 2 \"Density\" was not in the correct format");
@@ -53,13 +60,14 @@ public class ImagePainter {
 		
 		// make black canvas
 		ImagePPM canvas = new ImagePPM(imPPM.depth,imPPM.width,imPPM.height);
+		canvas.whiteWash();
 		
 		for(int brushSize = 0; brushSize < 5; brushSize++){
 			System.out.println("using brush size: " + brushSize);
 			double dissimilarity = Integer.MAX_VALUE;
 			
-			// generate N random positions where N = P / D
-			int n = (int)Math.round((canvas.width *  canvas.height) / density);
+			// generate N random positions where N = P / (D * brushSize), 
+			int n = (int)Math.round(((canvas.width *  canvas.height) / density)/(5-brushSize));
 			
 			for(int i = 0; i < n; i++){
 				int xLocation = (int)Math.round(Math.random() * (canvas.width-1));
@@ -76,8 +84,7 @@ public class ImagePainter {
 					
 					// get brush
 					int[][] brushToUse = brushes.getBrush(brushSizeToUse, brushRotationToUse);
-					
-					// get colour to apply
+
 					int[] averageColour = imPPM.getAverageColour(brushToUse, xLocation, yLocation);
 					
 					// if applying this colour makes the image closer to the absolute value of the colours in the actual image then apply the brush
@@ -92,11 +99,11 @@ public class ImagePainter {
 				}
 			}
 			
-			canvas.WritePPM("Images/ImageAfter"+brushSize+"BrushSizeUsed.ppm");
+			canvas.WritePPM("../Images/ImageAfter"+brushSize+"BrushSizeUsed.ppm");
 			
 		}
 		
-		canvas.WritePPM("Images/PaintedImage.ppm");
+		canvas.WritePPM("../Images/PaintedImage.ppm");
 		System.out.println("Painted Image Made Successfully");
 	}
 	
@@ -112,11 +119,19 @@ public class ImagePainter {
 		
 		return dis;
 	}
-	
-	private static Image paintImage(){
-		Image canvas = new Image();
-		
-		return null;
+
+	private static boolean checkFolderStructure(){
+		boolean folderStructureModified = false;
+
+		File iamgeFolder = new File("../Images/");
+		File outputImages = new File(iamgeFolder.getPath() + "/OutputImages/");
+		File brushes = new File(outputImages.getPath() + "/Brushes/");
+
+		if (!iamgeFolder.exists()){iamgeFolder.mkdirs(); folderStructureModified = true;}
+		if (!outputImages.exists()){outputImages.mkdirs();folderStructureModified = true;}
+		if (!brushes.exists()){brushes.mkdirs();folderStructureModified = true;}
+
+		return folderStructureModified;
 	}
 	
 }

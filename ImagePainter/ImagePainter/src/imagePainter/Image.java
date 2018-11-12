@@ -44,7 +44,7 @@ public class Image
         depth = inDepth;
     }
 
-    public void ReadPGM(String fileName)
+    public void ReadPGM(String fileName) throws Exception
     {
         String line;
         StringTokenizer st;
@@ -92,10 +92,13 @@ public class Image
             in2.close();
         } catch(ArrayIndexOutOfBoundsException e) {
             System.out.println("Error: image in "+fileName+" too big");
+            throw e;
         } catch(FileNotFoundException e) {
             System.out.println("Error: file "+fileName+" not found");
+            throw e;
         } catch(IOException e) {
             System.out.println("Error: end of stream encountered when reading "+fileName);
+            throw e;
         }
     }
 
@@ -150,14 +153,14 @@ public class Image
    }
     
     private void performSobel(){
-//    	int[][] horizontalMask = new int[][]{{-1,0,1},{-2,0,1},{-1,0,1}};
-//        int[][] verticalMask = new int[][]{{-1,-2,-1},{ 0, 0, 0},{ 1, 2, 1}};
+    	int[][] horizontalMask = new int[][]{{-1,0,1},{-2,0,1},{-1,0,1}};
+    	int[][] verticalMask = new int[][]{{-1,-2,-1},{ 0, 0, 0},{ 1, 2, 1}};
         
-    	int[][] horizontalMask = new int[][]{{-1,-2,0,2,1},{-1,-2,0,2,1},{-1,-2,0,2,1},{-1,-2,0,2,1},{-1,-2,0,2,1}};
-        int[][] verticalMask = new int[][]{{-1,-1,-1,-1,-1},{-2,-2,-2,-2,-2},{0,0,0,0,0},{2,2,2,2,2},{1,1,1,1,1}};
+//    	int[][] horizontalMask = new int[][]{{-1,-2,0,2,1},{-1,-2,0,2,1},{-1,-2,0,2,1},{-1,-2,0,2,1},{-1,-2,0,2,1}};
+//        int[][] verticalMask = new int[][]{{-1,-1,-1,-1,-1},{-2,-2,-2,-2,-2},{0,0,0,0,0},{2,2,2,2,2},{1,1,1,1,1}};
         
-//        int[][] horizontalMask = new int[][]{{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1}};
-//        int[][] verticalMask = new int[][]{{-1,-1,-1,-1,-1,-1,-1},{-2,-2,-2,-2,-2,-2,-2},{-4,-4,-4,-4,-4,-4,-4},{0,0,0,0,0,0,0},{4,4,4,4,4,4,4},{2,2,2,2,2,2,2},{1,1,1,1,1,1,1}};
+//      int[][] horizontalMask = new int[][]{{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1},{-1,-2,-4,0,4,2,1}};
+//      int[][] verticalMask = new int[][]{{-1,-1,-1,-1,-1,-1,-1},{-2,-2,-2,-2,-2,-2,-2},{-4,-4,-4,-4,-4,-4,-4},{0,0,0,0,0,0,0},{4,4,4,4,4,4,4},{2,2,2,2,2,2,2},{1,1,1,1,1,1,1}};
 //        
         
         Image sobelX = applyMask(horizontalMask);

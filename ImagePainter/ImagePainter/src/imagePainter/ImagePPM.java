@@ -92,8 +92,6 @@ public class ImagePPM
 
     public void WritePPM(String fileName)
     {
-        String line;
-        StringTokenizer st;
 
         try {
             DataOutputStream out =
@@ -130,28 +128,31 @@ public class ImagePPM
     
     // todo make mask offsets for X and Y
     public int[] getAverageColour(int[][] mask, int xLocation, int yLocation){
-    	int count = 0; // count the number of pixels in filter to calculate average
+    	double count = 0; // count the number of pixels in filter to calculate average
         int[] sum = new int[3];
-        int maskOffset = (mask.length)/2;
-        int remander = (mask.length)%2;
+        int maskOffsetX = (mask.length)/2;
+        int maskOffsetY = (mask[0].length)/2;
+        int remanderX = (mask.length)%2;
+        int remanderY = (mask[0].length)%2;
         
-    	for (int i = maskOffset - (mask.length) + remander; i < maskOffset; i++)
+    	for (int i = maskOffsetX - (mask.length) + remanderX; i < maskOffsetX; i++)
         {
-            for(int j = maskOffset - (mask[0].length) + remander; j < maskOffset; j++)
+            for(int j = maskOffsetY - (mask[0].length) + remanderY; j < maskOffsetY; j++)
             {
             	// if the masks current pixel is on the image
             	if(!(xLocation+i < 0 || xLocation+i >= this.height || yLocation+j < 0 || yLocation+j >= this.height))
             	{
-            		for(int colour = 0; colour < sum.length; colour++){
-                        sum[colour] += (int)Math.round(this.pixels[colour][xLocation+i][yLocation+j] * (1 - mask[i + maskOffset][j + maskOffset] / 255)); 
+            		double maskPixelValue = (1 - mask[i + maskOffsetX][j + maskOffsetY] / 255);
+            		for(int colour = 0; colour < sum.length; colour++){	
+                        sum[colour] += (int)Math.round(this.pixels[colour][xLocation+i][yLocation+j] * maskPixelValue); 
             		}
-            		count++;
+            		count += maskPixelValue;
             	}
 
             }
         }
 		for(int colour = 0; colour < sum.length; colour++){
-            sum[colour] = sum[colour] / count;
+            sum[colour] = (int)Math.round(sum[colour] / count);
 		}
     	return sum;
     }
@@ -163,12 +164,14 @@ public class ImagePPM
     	for (int i = maskOffset - (brush.length) ; i < maskOffset; i++){
             for(int j = maskOffset - (brush[0].length); j < maskOffset; j++){
             	if(!(xLocation+i < 0 || xLocation+i >= this.width || yLocation+j < 0 || yLocation+j >= this.height)){
-	            	if(brush[i+maskOffset+r][j+maskOffset+r]/255 != 1)
-	            	{
-	            		for(int k = 0; k < colour.length; k++){
-	            			this.pixels[k][xLocation+i][yLocation+j] = (int)Math.round(colour[k] * 1 - (brush[i+maskOffset+r][j+maskOffset+r]/255)); 
-	            		}	
-	            	}
+            		for(int k = 0; k < colour.length; k++){
+            			// ToDo factor in old colour to make transparent stroke
+            			double currentMaskPixel = (double)(brush[i+maskOffset+r][j+maskOffset+r]); 
+            			double alpha = 1 - (currentMaskPixel/255);
+            			int currentPixelColour = this.pixels[k][xLocation+i][yLocation+j];
+            			int newPixelValue = (int)Math.round(((colour[k] * alpha)+(currentPixelColour * (1 - alpha))));
+            			this.pixels[k][xLocation+i][yLocation+j] = newPixelValue; 
+            		}	
             	}
             }
         }
@@ -192,6 +195,16 @@ public class ImagePPM
 			}
     		averageRGB = sums;
     		return averageRGB;
+    	}
+    }
+    
+    public void whiteWash() {
+    	for(int i = 0; i < pixels[0].length; i++) {
+        	for(int j = 0; j < pixels[0].length; j++) {
+            	for(int c = 0; c < 3; c++) {
+            		pixels[c][i][j] = 255;
+            	}
+        	}
     	}
     }
 }

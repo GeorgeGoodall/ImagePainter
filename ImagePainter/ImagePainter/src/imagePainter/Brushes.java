@@ -1,5 +1,11 @@
 package imagePainter;
 
+/*
+
+class that generates and stores all the brush rotations
+
+*/
+
 import java.text.DecimalFormat;
 
 public class Brushes {
@@ -8,14 +14,14 @@ public class Brushes {
 	
 	private int[][][][] brushes;
 									
-	public Brushes(int[][] brushPixels)
-	{
-		makeSubBrushes(brushPixels);
-		//this.brushPixels = brushPixels;
-		
-		// generate 16 brush strokes, with each stroke being 360/16 (22.5) deg from the last
+	public Brushes(int[][] brushPixels,int scalingPower){
+		makeSubBrushes(brushPixels, scalingPower);
 		saveBrushes();
+	}
 	
+	public Brushes(int[][] brushPixels){
+		makeSubBrushes(brushPixels, 1);
+		saveBrushes();
 	}
 	
 	public int[][] getBrush(int size, int rotation){
@@ -23,15 +29,14 @@ public class Brushes {
 	}
 	
 	// responsible for scaling and rotation
-	private void makeSubBrushes(int[][] brush){
+	private void makeSubBrushes(int[][] brush,double scalingPower){
 		brushes = new int[5][][][];
 		
-		//toDo shorten this
 		// scale the brush stroke to 5 sizes
 		// to create various versions at S = 5 different sizes, scaled by factors 1=S; 2=S; : : : S=S = 1; just use the simplest sampling scheme
 		int[][][] scaledBrushes = new int[5][][];
 		for(int i = 0; i < 5; i++){
-			double scale = Double.parseDouble(df.format(1-(i/5f)));
+			double scale = Double.parseDouble(df.format( Math.pow(1-(i/5f),scalingPower)));
 			scaledBrushes[i] = scale(brush,scale);
 			brushes[i] = blackCanvases(16,scaledBrushes[i].length,scaledBrushes[i][0].length);
 		}
@@ -114,7 +119,7 @@ public class Brushes {
 				
 				Image brush = new Image(1,brushes[brushScale][brushRotation].length,brushes[brushScale][brushRotation][0].length);
 				brush.pixels = brushes[brushScale][brushRotation];
-				brush.WritePGM("Images/OutputImages/Brushes/brush-"+brushScale+"-"+brushRotation+".pgm");
+				brush.WritePGM("../Images/OutputImages/Brushes/brush-"+brushScale+"-"+brushRotation+".pgm");
 			}
 		}
 	}

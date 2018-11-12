@@ -58,16 +58,5 @@ public class MatrixOperations {
         }
 
         return result;
-	}
-	
-	private static double[][] convert2DIntArrayToDouble(int[][] toConvert){
-		double[][] toReturn = new double[toConvert.length][toConvert[0].length];
-		for(int i = 0; i < toConvert.length; i++){
-			for(int j = 0; j < toConvert[0].length; j++){
-				toReturn[i][j] = (double)toConvert[i][j];
-			}	
-		}
-		return toReturn;
-	}
-	
+	}	
 }
