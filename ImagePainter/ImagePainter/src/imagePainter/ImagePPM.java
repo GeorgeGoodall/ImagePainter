@@ -16,11 +16,15 @@ package imagePainter;
 import java.io.*;
 import java.util.*;
 
-public class ImagePPM
+public class ImagePPM implements Cloneable
 {
     public int [][][] pixels;
     public int depth,width,height;
     private int[] averageRGB;
+    
+    // vars for reverting stroke
+    private int[] savedAreaLocation;
+    private int[][][] savedAreaBeforeStroke;
 
     public ImagePPM()
     {
@@ -34,6 +38,20 @@ public class ImagePPM
         width = inWidth;
         height = inHeight;
         depth = inDepth;
+    }
+    
+    public int[][][] copyPixels(){
+    	int[][][] localPixels = new int[3][this.width][this.height];
+    	
+    	for(int j = 0; j < width;j++){
+    		for(int i = 0; i < height; i++){
+    			for(int c = 0; c < 3; c++){
+    				localPixels[c][i][j] = this.pixels[c][i][j];
+    			}
+    		}
+    	}
+    	
+    	return localPixels;
     }
 
     public void ReadPPM(String fileName)
@@ -127,7 +145,7 @@ public class ImagePPM
     }
     
     // todo make mask offsets for X and Y
-    public int[] getAverageColour(int[][] mask, int xLocation, int yLocation){
+    public int[] getAverageColor(int[][] mask, int xLocation, int yLocation){
     	double count = 0; // count the number of pixels in filter to calculate average
         int[] sum = new int[3];
         int maskOffsetX = (mask.length)/2;
@@ -143,35 +161,59 @@ public class ImagePPM
             	if(!(xLocation+i < 0 || xLocation+i >= this.height || yLocation+j < 0 || yLocation+j >= this.height))
             	{
             		double maskPixelValue = (1 - mask[i + maskOffsetX][j + maskOffsetY] / 255);
-            		for(int colour = 0; colour < sum.length; colour++){	
-                        sum[colour] += (int)Math.round(this.pixels[colour][xLocation+i][yLocation+j] * maskPixelValue); 
+            		for(int color = 0; color < sum.length; color++){	
+                        sum[color] += (int)Math.round(this.pixels[color][xLocation+i][yLocation+j] * maskPixelValue); 
             		}
             		count += maskPixelValue;
             	}
 
             }
         }
-		for(int colour = 0; colour < sum.length; colour++){
-            sum[colour] = (int)Math.round(sum[colour] / count);
+		for(int color = 0; color < sum.length; color++){
+            sum[color] = (int)Math.round(sum[color] / count);
 		}
     	return sum;
     }
     
-    public void paintStroke(int[][] brush, int[] colour, int xLocation, int yLocation){
+    public void paintStroke(int[][] brush, int[] color, int xLocation, int yLocation){
     	int maskOffset = (brush.length)/2;
     	int r = (brush.length)%2;
+    	
+    	savedAreaLocation = new int[]{xLocation,yLocation};
+    	savedAreaBeforeStroke = new int[3][brush.length][brush[0].length];
     	
     	for (int i = maskOffset - (brush.length) ; i < maskOffset; i++){
             for(int j = maskOffset - (brush[0].length); j < maskOffset; j++){
             	if(!(xLocation+i < 0 || xLocation+i >= this.width || yLocation+j < 0 || yLocation+j >= this.height)){
-            		for(int k = 0; k < colour.length; k++){
-            			// ToDo factor in old colour to make transparent stroke
+            		for(int k = 0; k < color.length; k++){
+            			savedAreaBeforeStroke[k][i+maskOffset+r][j+maskOffset+r] = this.pixels[k][xLocation+i][yLocation+j];
             			double currentMaskPixel = (double)(brush[i+maskOffset+r][j+maskOffset+r]); 
             			double alpha = 1 - (currentMaskPixel/255);
-            			int currentPixelColour = this.pixels[k][xLocation+i][yLocation+j];
-            			int newPixelValue = (int)Math.round(((colour[k] * alpha)+(currentPixelColour * (1 - alpha))));
-            			this.pixels[k][xLocation+i][yLocation+j] = newPixelValue; 
+            			int currentPixelColor = this.pixels[k][xLocation+i][yLocation+j];
+            			int newPixelValue = (int)Math.round(((color[k] * alpha)+(currentPixelColor * (1 - alpha))));
+            			this.pixels[k][xLocation+i][yLocation+j] = newPixelValue;
+            			
             		}	
+            	}
+            }
+        }
+    	//
+    	
+    }
+    
+    public void revertStroke(){
+    	
+    	int maskOffset = (savedAreaBeforeStroke[0].length)/2;
+    	int r = (savedAreaBeforeStroke[0].length)%2;
+    	
+    	for (int i = maskOffset - (savedAreaBeforeStroke[0].length) ; i < maskOffset; i++){
+            for(int j = maskOffset - (savedAreaBeforeStroke[0][0].length); j < maskOffset; j++){
+            	if(!(savedAreaLocation[0]+i < 0 || savedAreaLocation[0]+i >= this.width || savedAreaLocation[1]+j < 0 || savedAreaLocation[1]+j >= this.height)){
+	        		for(int k = 0; k < 3; k++){
+	        			// ToDo factor in old color to make transparent stroke
+	        			int oldPixel = savedAreaBeforeStroke[k][i+maskOffset+r][j+maskOffset+r];       
+	        			this.pixels[k][savedAreaLocation[0]+i][savedAreaLocation[1]+j] = oldPixel; 
+	        		}	
             	}
             }
         }

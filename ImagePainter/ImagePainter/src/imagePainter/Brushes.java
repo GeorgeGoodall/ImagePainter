@@ -16,12 +16,10 @@ public class Brushes {
 									
 	public Brushes(int[][] brushPixels,int scalingPower){
 		makeSubBrushes(brushPixels, scalingPower);
-		saveBrushes();
 	}
-	
+
 	public Brushes(int[][] brushPixels){
 		makeSubBrushes(brushPixels, 1);
-		saveBrushes();
 	}
 	
 	public int[][] getBrush(int size, int rotation){
@@ -113,7 +111,7 @@ public class Brushes {
 		return blackCanvas;
 	}
 	
-	private void saveBrushes(){
+	public void saveBrushes(){
 		for(int brushScale = 0; brushScale < 5; brushScale++){
 			for(int brushRotation = 0; brushRotation < 16; brushRotation++){
 				

@@ -2,7 +2,7 @@ package imagePainter;
 
 import java.text.DecimalFormat;
 
-// static class to store 2D matrix operations
+// static class to store 2D matrix operations for rotating an image
 // made by George Goodall, c1511942
 public class MatrixOperations {
 	
